@@ -1,0 +1,3 @@
+# Set this to your Android SDK directory before building.
+sdk.dir=C\:\\Users\\YOUR_NAME\\AppData\\Local\\Android\\Sdk
+

@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# LinkDrop runtime data and local builds
+windows/build/
+windows/dist/
+windows/*.spec
+windows/vendor/croc/*.exe
+windows/vendor/croc/*.zip
+*.linkdrop-part
+
+# Android / Gradle
+.gradle/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/dist/
+*.apk
+
+# Test artifacts
+*.out
+*.err
+ui-test-data/
+exe-test-data/
+final-smoke-data/
+croc-smoke*/
+
+# Editor / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+

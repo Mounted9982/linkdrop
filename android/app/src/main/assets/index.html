@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <title>LinkDrop</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">⇄</div>
+        <div>
+          <div class="brand-name">LinkDrop</div>
+          <div class="brand-sub">邻距直传 · Android</div>
+        </div>
+      </div>
+      <button class="icon-button" id="refreshButton" aria-label="刷新">↻</button>
+    </header>
+
+    <main>
+      <section class="page active" data-page="home">
+        <div class="page-heading">
+          <div><h1>概览</h1><p>让传文件这件事简单一点。</p></div>
+          <span class="live-pill"><i></i>服务运行中</span>
+        </div>
+        <div class="hero-card">
+          <div class="eyebrow">这台设备</div>
+          <h2 id="deviceName">Android 设备</h2>
+          <button class="address" id="addressButton">正在获取地址…</button>
+          <p class="hint">同一局域网内自动发现，连接使用 TLS 加密。</p>
+          <div class="code-strip">
+            <div><span>6 位配对码</span><strong id="pairCode">------</strong></div>
+            <button class="small-button light" onclick="copyCode()">复制</button>
+          </div>
+        </div>
+
+        <div class="section-title"><h2>附近设备</h2><button class="text-button" onclick="scanPeers()">重新扫描</button></div>
+        <div id="peers" class="stack"></div>
+        <div class="empty" id="peersEmpty">
+          <div class="empty-icon">◎</div>
+          <strong>暂未发现设备</strong>
+          <span>确认 Windows 电脑和手机在同一 Wi-Fi，并允许应用访问局域网。</span>
+        </div>
+
+        <div class="notice">
+          <strong>Windows 互通</strong>
+          <span>在 Windows 的“发送与浏览”中输入上方地址和配对码即可连接。</span>
+        </div>
+      </section>
+
+      <section class="page" data-page="share">
+        <div class="page-heading"><div><h1>共享与接收</h1><p>只开放你明确选择的文件夹。</p></div></div>
+        <div class="action-card">
+          <div class="card-icon blue">＋</div>
+          <div class="grow"><strong>添加共享文件夹</strong><span>Windows 可浏览并下载其中的文件</span></div>
+          <button class="small-button" onclick="addShare()">选择</button>
+        </div>
+        <div class="section-title"><h2>已共享</h2><span id="shareCount" class="muted">0 个</span></div>
+        <div id="shares" class="stack"></div>
+
+        <div class="section-title spaced"><h2>接收文件夹</h2></div>
+        <div class="action-card">
+          <div class="card-icon green">↓</div>
+          <div class="grow"><strong id="receiveTitle">尚未选择</strong><span id="receiveSubtitle">Windows 向你发送文件前必须设置</span></div>
+          <button class="small-button" onclick="chooseReceiveFolder()">选择</button>
+        </div>
+
+        <div class="section-title spaced"><h2>接收记录</h2></div>
+        <div id="inbox" class="stack"></div>
+      </section>
+
+      <section class="page" data-page="send">
+        <div class="page-heading"><div><h1>发送与浏览</h1><p>连接 Windows，浏览共享目录或直接发送。</p></div></div>
+        <div class="connect-card">
+          <label>目标地址</label>
+          <input id="addressInput" inputmode="url" placeholder="192.168.1.10:48610">
+          <label>配对码</label>
+          <div class="inline">
+            <input id="codeInput" inputmode="numeric" maxlength="6" placeholder="6 位数字">
+            <button class="primary compact" onclick="connectRemote()">连接</button>
+          </div>
+          <div id="connectStatus" class="status-line">未连接</div>
+        </div>
+
+        <div id="remoteBrowser" class="hidden">
+          <div class="section-title"><h2>对方的共享文件</h2><button id="upButton" class="text-button" onclick="goUp()">← 返回</button></div>
+          <select id="remoteShareSelect" onchange="changeRemoteShare()"></select>
+          <div class="path-line" id="remotePath">/</div>
+          <div id="remoteFiles" class="file-list"></div>
+        </div>
+
+        <div class="section-title spaced"><h2>直接发送</h2></div>
+        <div class="action-card">
+          <div class="card-icon blue">↗</div>
+          <div class="grow"><strong id="selectionTitle">尚未选择</strong><span id="selectionSubtitle">选择文件或整个文件夹发给 Windows</span></div>
+        </div>
+        <div class="button-row">
+          <button class="secondary" onclick="chooseFiles()">选择文件</button>
+          <button class="secondary" onclick="chooseFolder()">选择文件夹</button>
+        </div>
+        <button class="primary wide" id="sendButton" onclick="sendSelected()">开始发送</button>
+        <div class="transfer-card hidden" id="transferCard">
+          <div class="inline between"><strong id="transferTitle">传输中</strong><span id="transferPercent">0%</span></div>
+          <div class="progress"><i id="progressBar"></i></div>
+          <div class="muted" id="transferDetail">0 B / 0 B</div>
+        </div>
+      </section>
+
+      <section class="page" data-page="remote">
+        <div class="page-heading"><div><h1>公网传输</h1><p>没有公网 IP 时，通过 croc 加密通道传输。</p></div></div>
+        <div class="notice blue-notice">
+          <strong>端到端加密 · 中继兜底</strong>
+          <span>Android 版通过 croc 官方网页参与传输，不执行随包二进制。传送完成后可回到本应用继续使用局域网模式。</span>
+        </div>
+        <button class="primary wide" onclick="openCroc('')">打开 croc 发送网页</button>
+        <div class="connect-card spaced">
+          <label>收到对方的口令？</label>
+          <input id="crocCode" placeholder="例如 tired-blue-apple">
+          <button class="primary wide" onclick="openCroc(document.getElementById('crocCode').value)">凭口令接收</button>
+        </div>
+        <div class="notice">
+          <strong>安全提示</strong>
+          <span>口令只发给接收方。croc 网页是第三方开源服务，传输内容由 PAKE 密钥端到端加密。</span>
+        </div>
+      </section>
+
+      <section class="page" data-page="settings">
+        <div class="page-heading"><div><h1>设置</h1><p>设备身份与传输安全。</p></div></div>
+        <div class="connect-card">
+          <label>设备名称</label>
+          <input id="nameSetting" maxlength="48">
+          <label>6 位配对码</label>
+          <div class="inline">
+            <input id="codeSetting" maxlength="6" inputmode="numeric">
+            <button class="secondary compact" onclick="randomCode()">随机生成</button>
+          </div>
+          <button class="primary wide" onclick="saveIdentity()">保存设置</button>
+        </div>
+        <div class="security-card">
+          <div class="eyebrow">设备 TLS 指纹</div>
+          <code id="fingerprint">加载中…</code>
+          <p>首次连接会记录该指纹；若对方身份发生变化，应用会阻止连接。</p>
+        </div>
+        <div class="notice">
+          <strong>Android 后台接收</strong>
+          <span>LinkDrop 使用前台服务保持接收。系统通知中会显示“局域网接收服务运行中”。</span>
+        </div>
+        <div class="about">
+          <span>LinkDrop Android 1.0.0</span>
+          <span>与 Windows 1.1+ 互通</span>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <button data-target="home" class="active"><span>⌂</span>概览</button>
+      <button data-target="share"><span>▤</span>共享</button>
+      <button data-target="send"><span>↗</span>发送</button>
+      <button data-target="remote"><span>◎</span>公网</button>
+      <button data-target="settings"><span>⚙</span>设置</button>
+    </nav>
+  </div>
+
+  <div class="modal-backdrop hidden" id="incomingModal">
+    <div class="modal">
+      <div class="modal-icon">↓</div>
+      <h2>收到文件请求</h2>
+      <p id="incomingSummary"></p>
+      <div id="incomingFiles" class="modal-files"></div>
+      <div class="button-row modal-actions">
+        <button class="secondary" onclick="answerIncoming(false)">拒绝</button>
+        <button class="primary" onclick="answerIncoming(true)">接收</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
+
